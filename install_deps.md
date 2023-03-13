@@ -33,16 +33,29 @@ export PERL5LIB=$PERL5LIB:$HOME/cpanm/lib/perl5
 cpanm -l $HOME/cpanm Bio::DB::BigFile
 ```
 
-### Install cpanm to install bio big wig
-
-
 
 ### Download loftee 
+
+```
+git clone -b grch38 https://github.com/konradjk/loftee
+```
+
+### Download PrimateAI database 
+```
+# Download pre-computed scores from https://github.com/Illumina/PrimateAI (note you need to sign up for a free account for this)
+
+module load htslib
+
+mkdir primateAI && cd primateAI
+gunzip -cf PrimateAI_scores_v0.2_hg38.tsv.gz | sed '12s/.*/#&/' | sed '/^$/d' | awk 'NR<12{print $0;next}{print $0 | "sort -k1,1 -k 2,2n -V"}' | bgzip > PrimateAI_scores_v0.2_GRCh38_sorted.tsv.bgz
+tabix -s 1 -b 2 -e 2 PrimateAI_scores_v0.2_GRCh38_sorted.tsv.bgz
+```
 
 
 ### Move dependencies into the correct folder 
 
 ### Convert bgen to vcf with no samples
+
 
 
 ```
