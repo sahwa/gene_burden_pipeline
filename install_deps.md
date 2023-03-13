@@ -12,7 +12,7 @@ mkdir deps && cd deps
 ```
 
 
-### Install Kent's source tree
+### Install Kent's source tree (required for Bio::DB::BigFile installation)
 
 
 ```
@@ -33,20 +33,26 @@ echo 'CFLAGS="-fPIC"' > ../inc/localEnvironment.mk
 make clean && make
 cd ../jkOwnLib
 make clean && make
+```
 
+### Install Bio::DB::BigFile dependency
+
+```
 mkdir -p $HOME/cpanm
 export PERL5LIB=$PERL5LIB:$HOME/cpanm/lib/perl5
 cpan install Bio::DB::BigFile
 ```
 
 
-### Download loftee 
+### Download loftee which annotates loss of function variants
 
 ```
 git clone -b grch38 https://github.com/konradjk/loftee
 ```
 
-### Download PrimateAI database 
+
+
+### Download primateAI
 ```
 # Download pre-computed scores from https://github.com/Illumina/PrimateAI (note you need to sign up for a free account for this)
 
@@ -87,5 +93,32 @@ tabix ../data/${outname}.bgz
 
 ### Run VEP
 
+```
+loftee=/well/ckb/users/aey472/projects/vep_annotation/Plugins/loftee
+
+export PERL5LIB="/well/ckb/users/aey472/projects/vep_annotation/Plugins/loftee":$PERL5LIB
+export PERL5LIB="/users/ckb/aey472/cpanm/lib/perl5/x86_64-linux-thread-multi":$PERL5LIB
+export PERL5LIB="/users/ckb/aey472/.vep/Plugins/cadd":$PERL5LIB
+export PERL5LIB=$PERL5LIB:$HOME/cpanm/lib/perl5
+
+module purge all
+module load VEP/103.1-GCC-10.2.0
+module load OpenSSL/1.1
+module load SAMtools/1.12-GCC-10.2.0
+module load HTSlib/1.11-GCC-10.2.0
+
+vep \
+        --input_file ${input_vcf} \
+        --dir_cache /gpfs3/well/ckb/users/aey472/projects/vep_annotation/data/cache \
+        --assembly GRCh38 \
+        -o ../output/imputed_v2.0_b38_chr${SGE_TASK_ID}_annot.loftee.0Kb.vcf \
+        --force_overwrite \
+        --vcf \
+        --everything \
+        --offline \
+        --distance 0 \
+        --plugin LoF,loftee_path:${loftee}/,human_ancestor_fa:/well/ckb/users/aey472/projects/vep_annotation/data/human_ancestor.fa \
+        --cache
+```
 
 
