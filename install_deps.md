@@ -1,7 +1,13 @@
+### Initial setup
+
+* Make sure you have an update to date gcc compiler in your path 
+
+
 ### Set up directories
 
 ```
 mkdir gene_test && cd gene_test
+mkdir bin
 mkdir deps && cd deps
 ```
 
@@ -30,7 +36,7 @@ make clean && make
 
 mkdir -p $HOME/cpanm
 export PERL5LIB=$PERL5LIB:$HOME/cpanm/lib/perl5
-cpanm -l $HOME/cpanm Bio::DB::BigFile
+cpan install Bio::DB::BigFile
 ```
 
 
