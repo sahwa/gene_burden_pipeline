@@ -7,8 +7,10 @@
 
 ```
 mkdir gene_test && cd gene_test
+base_dir=${PWD}
 mkdir bin
 mkdir deps && cd deps
+deps=${PWD}
 ```
 
 
@@ -33,6 +35,7 @@ echo 'CFLAGS="-fPIC"' > ../inc/localEnvironment.mk
 make clean && make
 cd ../jkOwnLib
 make clean && make
+
 ```
 
 ### Install Bio::DB::BigFile dependency
@@ -41,12 +44,15 @@ make clean && make
 mkdir -p $HOME/cpanm
 export PERL5LIB=$PERL5LIB:$HOME/cpanm/lib/perl5
 cpan install Bio::DB::BigFile
+
+## at this point in the installation, cpan should prompt you to paste in the link for Kent's source tree that we just installed. If it doesn't, something has probably gone wrong!
 ```
 
 
 ### Download loftee which annotates loss of function variants
 
 ```
+cd ${deps}
 git clone -b grch38 https://github.com/konradjk/loftee
 ```
 
@@ -54,6 +60,8 @@ git clone -b grch38 https://github.com/konradjk/loftee
 
 ### Download primateAI
 ```
+cd ${deps}
+
 # Download pre-computed scores from https://github.com/Illumina/PrimateAI (note you need to sign up for a free account for this)
 
 module load htslib
@@ -74,21 +82,32 @@ tabix -s 1 -b 2 -e 2 PrimateAI_scores_v0.2_GRCh38_sorted.tsv.bgz
 module load bcftools
 module load htslib
 
-qctool=
-bgen=
-bcftools=
+qctool=path_to_qctool
+bgen=path_to_bgen_file
 
+## this just gets the first sample from the bgen. 
+## For some reason the VCF needs to have a single sample when you pass it to bcftools
 
 ${qctool} \
+       -g chr22.bgen -os chr22.bgen.sample >
+sed '1,2d' chr22.bgen.sample | head -n1 > keep_sample.txt
+
+
+### convert the bgen to a single sample vcf
+### split this by chr
+${qctool} \
        -g ${bgen} \
-       -og ../data/${outname}.vcf.gz \
+       -og single_sample.vcf.gz \
        -s ${sample} \
-       -excl-samples 23_gsid_keep1.sample \
+       -excl-samples keep_sample.txt \
        -force
 
-zcat ../data/${outname}.vcf.gz | bgzip -c > ../data/${outname}.bgz
-tabix ../data/${outname}.bgz
-/well/ckb/users/aey472/program_files/bcftools/bcftools view -G ../data/${outname}.bgz -Ob > ../data/${outname}_nosamples.bgz
+## bgzip the vcf
+zcat single_sample.vcf.gz | bgzip -c > single_sample.vcf.bgz
+tabix single_sample.vcf.bgz
+
+## strip the samples from the vcf, we don't need these any more
+bcftools view -G single_sample.vcf.bgz -Ob > no_sample.vcf.bgz
 ```
 
 ### Run VEP
